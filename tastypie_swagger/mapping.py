@@ -241,9 +241,9 @@ class ResourceSwaggerMapping(object):
         detail_uri_name = getattr(self.resource._meta, "detail_uri_name", "pk")
         return detail_uri_name == "pk" and "id" or detail_uri_name
 
-    def build_parameters_from_extra_action(self, method, fields):
+    def build_parameters_from_extra_action(self, method, fields, add_pk=True):
         parameters = []
-        if method.upper() == 'GET':
+        if method.upper() == 'GET' and add_pk:
             parameters.append(self.build_parameter(paramType='path', name=self._detail_uri_name(), dataType='int', description='ID of resource'))
         for name, field in fields.items():
             for parameter in parameters:
@@ -295,9 +295,12 @@ class ResourceSwaggerMapping(object):
         }
 
     def build_extra_operation(self, extra_action):
+        add_pk = True
+        if extra_action.get('path'):
+            add_pk = False
         return {
             'httpMethod': extra_action['http_method'].upper(),
-            'parameters': self.build_parameters_from_extra_action(method=extra_action.get('http_method'), fields=extra_action.get('fields')),
+            'parameters': self.build_parameters_from_extra_action(method=extra_action.get('http_method'), fields=extra_action.get('fields'), add_pk=add_pk),
             'responseClass': 'Object', #TODO this should be extended to allow the creation of a custom object.
             'nickname': extra_action['name'],
         }
